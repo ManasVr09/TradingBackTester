@@ -1,0 +1,45 @@
+project_name: trading_backtester
+research_status: educational
+data:
+  source: yahoo_finance
+  granularity: 1d
+  start: "2016-01-01"
+  end_exclusive: ""        # empty = up to today
+  auto_adjust: true
+  actions: false
+tickers:
+  universe:
+    - AAPL
+    - MSFT
+    - AMZN
+    - META
+    - NVDA
+  benchmark: SPY
+cache:
+  dir: data/cache
+  format: csv
+  mode: incremental_append
+  retry_attempts: 3
+  backoff_seconds: 2
+  rate_limit_seconds: 1.0
+  allow_stale_cache_on_error: false
+  freshness_days: 1
+portfolio:
+  initial_capital: 100000.0
+  allocation: equal_weight
+  max_position: 1.0
+execution:
+  entry_rule: next_open
+  exit_rule: same_day_close
+  transaction_cost_bps: 5.0
+  slippage_bps: 2.0
+  cost_scenarios_bps: [0.0, 5.0, 10.0, 25.0]
+strategies:
+  enabled:
+    - type: sma_crossover
+      fast: 20
+      slow: 50
+    - type: ema_crossover
+      fast: 12
+      slow: 26
+  benchmark: buy_and_hold

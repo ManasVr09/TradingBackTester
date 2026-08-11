@@ -1,0 +1,165 @@
+{
+  "benchmark_metrics": {
+    "annualized_volatility": 0.358113351292482,
+    "avg_loss": 0.0,
+    "avg_win": 51.47389034676356,
+    "cagr": 0.45485453666096665,
+    "exposure": 0.9996244836650394,
+    "final_wealth": 5247389.034676356,
+    "hit_rate": 1.0,
+    "initial_capital": 100000.0,
+    "maximum_drawdown": -0.533894578050234,
+    "sharpe": 1.2260599992172199,
+    "sortino": 1.7095307956088377,
+    "time_under_water_days": 373,
+    "total_return": 51.47389034676356,
+    "trade_count": 12,
+    "turnover": 53.47389034676356
+  },
+  "config_snapshot": {
+    "backtest": {
+      "cost_scenarios_bps": [
+        0.0,
+        5.0,
+        10.0,
+        25.0
+      ],
+      "entry_rule": "next_open",
+      "exit_rule": "same_day_close",
+      "initial_capital": 100000.0,
+      "max_position": 1.0,
+      "slippage_bps": 2.0,
+      "transaction_cost_bps": 5.0
+    },
+    "strategy": "sma_crossover_20_50",
+    "strategy_params": {
+      "allow_short": false,
+      "fast": 20,
+      "slow": 50
+    },
+    "strategy_source": {
+      "builtin": true,
+      "file_name": "src/strategies.py",
+      "sha256": "e028fb70a9675b2191e8f3209201caf1ddc7d621d51603a0d7d38ddd34125be2"
+    },
+    "tickers": [
+      "AAPL",
+      "AMZN",
+      "META",
+      "MSFT",
+      "NVDA",
+      "SPY"
+    ]
+  },
+  "data_metadata": {
+    "end_exclusive": "2026-08-08",
+    "per_ticker": {
+      "AAPL": {
+        "last_date": "2026-08-06",
+        "rows": 2663
+      },
+      "AMZN": {
+        "last_date": "2026-08-06",
+        "rows": 2663
+      },
+      "META": {
+        "last_date": "2026-08-06",
+        "rows": 2663
+      },
+      "MSFT": {
+        "last_date": "2026-08-06",
+        "rows": 2663
+      },
+      "NVDA": {
+        "last_date": "2026-08-06",
+        "rows": 2663
+      },
+      "SPY": {
+        "last_date": "2026-08-06",
+        "rows": 2663
+      }
+    },
+    "retrieved_at_utc": "2026-08-07T11:21:33+00:00",
+    "source": "yahoo_finance",
+    "start": "2016-01-01",
+    "tickers": [
+      "AAPL",
+      "MSFT",
+      "AMZN",
+      "META",
+      "NVDA",
+      "SPY"
+    ]
+  },
+  "metrics": {
+    "0.0": {
+      "annualized_volatility": 0.24136434027024273,
+      "avg_loss": -0.054716984799225474,
+      "avg_win": 0.21445072773793702,
+      "cagr": 0.25408210990834124,
+      "exposure": 0.6698585555138316,
+      "final_wealth": 1093114.4361367058,
+      "hit_rate": 0.5308641975308642,
+      "initial_capital": 100000.0,
+      "maximum_drawdown": -0.48080740790985066,
+      "sharpe": 1.0587105601030677,
+      "sortino": 1.2919717819440484,
+      "time_under_water_days": 405,
+      "total_return": 9.931144361367059,
+      "trade_count": 324,
+      "turnover": 282.95617216760076
+    },
+    "10.0": {
+      "annualized_volatility": 0.24173646642069574,
+      "avg_loss": -0.054716984799225474,
+      "avg_win": 0.21445072773793702,
+      "cagr": 0.24792465489641335,
+      "exposure": 0.6698585555138316,
+      "final_wealth": 1037731.5736685648,
+      "hit_rate": 0.5308641975308642,
+      "initial_capital": 100000.0,
+      "maximum_drawdown": -0.4849631496410548,
+      "sharpe": 1.0370843934494975,
+      "sortino": 1.266304565085954,
+      "time_under_water_days": 405,
+      "total_return": 9.377315736685647,
+      "trade_count": 324,
+      "turnover": 273.5444789147525
+    },
+    "25.0": {
+      "annualized_volatility": 0.24230866952396268,
+      "avg_loss": -0.054716984799225474,
+      "avg_win": 0.21445072773793702,
+      "cagr": 0.2387252408932543,
+      "exposure": 0.6698585555138316,
+      "final_wealth": 959711.1449549219,
+      "hit_rate": 0.5308641975308642,
+      "initial_capital": 100000.0,
+      "maximum_drawdown": -0.4911442417738118,
+      "sharpe": 1.004661264164314,
+      "sortino": 1.22751981278827,
+      "time_under_water_days": 407,
+      "total_return": 8.59711144954922,
+      "trade_count": 324,
+      "turnover": 260.07086749056026
+    },
+    "5.0": {
+      "annualized_volatility": 0.24154947064527255,
+      "avg_loss": -0.054716984799225474,
+      "avg_win": 0.21445072773793702,
+      "cagr": 0.25100092793102236,
+      "exposure": 0.6698585555138316,
+      "final_wealth": 1065075.076401433,
+      "hit_rate": 0.5308641975308642,
+      "initial_capital": 100000.0,
+      "maximum_drawdown": -0.4828887943119968,
+      "sharpe": 1.0478965514372753,
+      "sortino": 1.2790703298365986,
+      "time_under_water_days": 405,
+      "total_return": 9.65075076401433,
+      "trade_count": 324,
+      "turnover": 278.2062937746927
+    }
+  },
+  "strategy_name": "sma_crossover_20_50"
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+data/cache/*.csv
+data/metadata.json
+.DS_Store
+
+# Custom strategies are versioned by default. Uncomment to keep them out of git:
+# strategies/custom/*.py
