@@ -59,6 +59,25 @@ _BUILTIN_LABELS = {
 _STRING_PARAM_OPTIONS = {("atr_breakout", "exit_rule"): ["midline", "lower_band"]}
 
 
+def readable_table(frame, *, hide_index=True):
+    columns = {
+        name: st.column_config.Column(str(name), width="large" if name in
+            ("Strategy", "strategy", "path", "model", "retrieved_at_utc") else "medium")
+        for name in frame.columns
+    }
+    st.dataframe(frame, hide_index=hide_index, width="stretch", row_height=44, column_config=columns)
+
+
+def result_card(label, value, *, text=False, help=None, width=250):
+    """Wrap full labels and text outcomes; reserve large metric type for short numbers."""
+    with st.container(border=True, width=width):
+        st.markdown(label, help=help)
+        if text or len(str(value)) > 8:
+            st.subheader(str(value), anchor=False)
+        else:
+            st.metric(label, value, label_visibility="collapsed")
+
+
 def available_tickers() -> list[str]:
     """Configured tickers that currently have a cache file."""
     configured = list(dict.fromkeys(CONFIG["tickers"]["universe"] + [CONFIG["tickers"]["benchmark"]]))
@@ -307,15 +326,15 @@ def overview(report) -> None:
     base = report.metrics[base_bps]
     benchmark = report.benchmark_metrics
     with st.container(horizontal=True):
-        st.metric("Net return", pct(base["total_return"]), border=True)
-        st.metric("CAGR", pct(base["cagr"]), border=True)
-        st.metric("Sharpe", f"{base['sharpe']:.2f}", border=True)
-        st.metric("Max drawdown", pct(base["maximum_drawdown"]), border=True)
-        st.metric("Trades", f"{base['trade_count']:,}", border=True)
-        st.metric("Buy-and-hold return", pct(benchmark["total_return"]), border=True)
+        result_card('Net return', pct(base['total_return']))
+        result_card('CAGR', pct(base['cagr']))
+        result_card('Sharpe', f"{base['sharpe']:.2f}")
+        result_card('Max drawdown', pct(base['maximum_drawdown']))
+        result_card('Trades', f"{base['trade_count']:,}")
+        result_card('Buy-and-hold return', pct(benchmark['total_return']))
     st.subheader("Cost sensitivity")
     table = pd.DataFrame(report.metrics).T.rename_axis("cost_bps").reset_index()
-    st.dataframe(table, hide_index=True, width="stretch")
+    readable_table(table, hide_index=True)
     st.caption(
         f"Execution clock: signal from close(t) enters at open(t+1); exits at the same-day close; "
         f"terminal liquidation on the last date. All rows are net of one-way "
@@ -338,18 +357,18 @@ def per_ticker(report) -> None:
         tooltip=["date", "path", "wealth"],
     )
     st.altair_chart(chart, width="stretch", height=400)
-    st.dataframe(report.per_stock, hide_index=True, width="stretch")
+    readable_table(report.per_stock, hide_index=True)
 
 
 def trade_ledger(report) -> None:
     st.subheader("Trade ledger")
-    st.dataframe(report.trade_ledger, hide_index=True, width="stretch")
+    readable_table(report.trade_ledger, hide_index=True)
     st.caption("Prices are raw market fills; costs are charged separately per event.")
 
 
 def data_cache() -> None:
     st.subheader("Cache status")
-    st.dataframe(cache_status(CONFIG), hide_index=True, width="stretch")
+    readable_table(cache_status(CONFIG), hide_index=True)
     metadata = load_metadata(CONFIG)
     if metadata:
         st.json(metadata, expanded=False)
