@@ -15,9 +15,17 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pandas as pd
-import yfinance as yf
 
 from .config import ROOT
+
+
+def __getattr__(name: str):
+    """Load the network client only for refreshes (and keep the public yf alias)."""
+    if name == "yf":
+        import yfinance
+        globals()["yf"] = yfinance
+        return yfinance
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +133,7 @@ def download_ticker(
     last_error: Exception | None = None
     for attempt in range(int(retry_attempts)):
         try:
-            raw = yf.download(
+            raw = __getattr__("yf").download(
                 ticker,
                 start=start,
                 end=end,

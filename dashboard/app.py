@@ -19,7 +19,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -28,7 +27,6 @@ sys.path.insert(0, str(ROOT))
 
 from src.config import load_config  # noqa: E402
 from src.data import cache_path, cache_status, ensure_data, load_cached, load_metadata  # noqa: E402
-from src.pipeline import build_report  # noqa: E402
 from src.strategies import STRATEGY_REGISTRY  # noqa: E402
 from src.strategy_loader import (  # noqa: E402
     GATES,
@@ -67,15 +65,20 @@ def available_tickers() -> list[str]:
     return [ticker for ticker in configured if cache_path(ticker, CONFIG).exists()]
 
 
-def cache_signatures(tickers: list[str]) -> tuple[tuple[str, float], ...]:
-    """(ticker, file mtime) pairs used as the cache_data key."""
-    return tuple((ticker, cache_path(ticker, CONFIG).stat().st_mtime) for ticker in tickers)
+def cache_signatures(tickers: list[str]) -> tuple:
+    """Paths, nanosecond mtimes, and sizes invalidate cached reads after a refresh."""
+    signatures = []
+    for ticker in tickers:
+        path = cache_path(ticker, CONFIG)
+        stat = path.stat()
+        signatures.append((ticker, str(path.resolve()), stat.st_mtime_ns, stat.st_size))
+    return tuple(signatures)
 
 
-@st.cache_data(ttl=300, show_spinner=False)
-def load_cache_frames(signatures: tuple[tuple[str, float], ...]) -> dict[str, pd.DataFrame]:
+@st.cache_data(max_entries=16, show_spinner=False)
+def load_cache_frames(signatures: tuple) -> dict[str, pd.DataFrame]:
     """Load validated cached frames, keyed by file mtimes so edits invalidate."""
-    return {ticker: load_cached(ticker, CONFIG) for ticker, _mtime in signatures}
+    return {ticker: load_cached(ticker, CONFIG) for ticker, _path, _mtime, _size in signatures}
 
 
 def sample_prices() -> pd.DataFrame | None:
@@ -83,8 +86,15 @@ def sample_prices() -> pd.DataFrame | None:
     available = available_tickers()
     if not available:
         return None
-    frames = load_cache_frames(cache_signatures(available))
+    frames = load_cache_frames(cache_signatures(available[:1]))
     return next(iter(frames.values()))
+
+
+@st.cache_data(max_entries=16, show_spinner=False)
+def cached_date_bounds(signatures: tuple):
+    frames = load_cache_frames(signatures)
+    return (min(frame["date"].min() for frame in frames.values()).date(),
+            max(frame["date"].max() for frame in frames.values()).date())
 
 
 def strategy_specs() -> list[dict]:
@@ -180,6 +190,8 @@ def run_backtest() -> None:
         end = pd.Timestamp(end)
         frames = {ticker: frame.loc[(frame["date"] >= start) & (frame["date"] <= end)] for ticker, frame in frames.items()}
     try:
+        from src.pipeline import build_report
+
         report = build_report(
             CONFIG,
             frames,
@@ -207,6 +219,9 @@ def refresh_cache() -> None:
 def scan_saved_customs() -> None:
     """Register strategies saved under ``strategies/custom/`` once per session."""
     if "saved_customs" in st.session_state:
+        return
+    if not CUSTOM_DIR.exists() or not any(CUSTOM_DIR.glob("*.py")):
+        st.session_state["saved_customs"] = {}
         return
     sample = sample_prices()
     registered = register_saved_strategies(CUSTOM_DIR, sample)
@@ -276,10 +291,12 @@ def pct(value: float) -> str:
 
 
 def overview(report) -> None:
+    import altair as alt
+
     st.subheader("Equal-weight portfolio vs buy-and-hold")
     equity = report.equity_curve
     plot = equity.loc[equity["path"].isin([report.strategy_name, "buy_and_hold_benchmark"])]
-    chart = alt.Chart(plot).mark_line().encode(
+    chart = alt.Chart(plot[["date", "path", "wealth"]]).mark_line().encode(
         x=alt.X("date:T", title="Date"),
         y=alt.Y("wealth:Q", title="Wealth ($)"),
         color=alt.Color("path:N", title="Path"),
@@ -307,12 +324,14 @@ def overview(report) -> None:
 
 
 def per_ticker(report) -> None:
+    import altair as alt
+
     st.subheader("Per-ticker equity paths")
     equity = report.equity_curve
     ticker_paths = equity.loc[equity["path"].str.startswith(f"{report.strategy_name}::")]
     benchmark = equity.loc[equity["path"] == "buy_and_hold_benchmark"]
     plot = pd.concat([ticker_paths, benchmark], ignore_index=True)
-    chart = alt.Chart(plot).mark_line().encode(
+    chart = alt.Chart(plot[["date", "path", "wealth"]]).mark_line().encode(
         x=alt.X("date:T", title="Date"),
         y=alt.Y("wealth:Q", title="Wealth ($)"),
         color=alt.Color("path:N", title="Path"),
@@ -406,9 +425,7 @@ with st.sidebar:
                     else:
                         st.number_input(param, value=float(default), key=f"custom_param_{param}")
     if available:
-        frames = load_cache_frames(cache_signatures(available))
-        all_dates = pd.concat([frame["date"] for frame in frames.values()])
-        min_date, max_date = all_dates.min().date(), all_dates.max().date()
+        min_date, max_date = cached_date_bounds(cache_signatures(available))
         st.date_input("Start date", value=min_date, min_value=min_date, max_value=max_date, key="start_date")
         st.date_input("End date", value=max_date, min_value=min_date, max_value=max_date, key="end_date")
     costs = CONFIG["execution"]["cost_scenarios_bps"]
@@ -432,28 +449,21 @@ st.title("Trading backtester")
 st.caption("Multi-asset daily backtesting with a per-ticker CSV cache")
 st.warning(DISCLAIMER, icon=":material/warning:")
 
-tab_overview, tab_ticker, tab_ledger, tab_cache, tab_config = st.tabs(
-    ["Overview", "Per-Ticker", "Trade Ledger", "Data Cache", "Strategy config"]
-)
-with tab_overview:
-    if report is None:
-        st.info("No backtest run yet — choose a configuration and click 'Run backtest' in the sidebar.")
-    else:
-        overview(report)
-with tab_ticker:
-    if report is None:
-        st.info("Run a backtest to see per-ticker paths.")
-    else:
-        per_ticker(report)
-with tab_ledger:
-    if report is None:
-        st.info("Run a backtest to inspect the trade ledger.")
-    else:
-        trade_ledger(report)
-with tab_cache:
-    data_cache()
-with tab_config:
-    if report is None:
-        st.info("Run a backtest to freeze a configuration snapshot.")
-    else:
-        strategy_config(report)
+tab_labels = ["Overview", "Per-Ticker", "Trade Ledger", "Data Cache", "Strategy config"]
+tabs = st.tabs(tab_labels, on_change="rerun", key="report_view")
+renderers = [overview, per_ticker, trade_ledger, None, strategy_config]
+empty_messages = [
+    "No backtest run yet — choose a configuration and click 'Run backtest' in the sidebar.",
+    "Run a backtest to see per-ticker paths.",
+    "Run a backtest to inspect the trade ledger.",
+    "", "Run a backtest to freeze a configuration snapshot.",
+]
+for tab, render, empty_message in zip(tabs, renderers, empty_messages):
+    if tab.open:
+        with tab:
+            if render is None:
+                data_cache()
+            elif report is None:
+                st.info(empty_message)
+            else:
+                render(report)

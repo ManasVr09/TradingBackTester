@@ -238,3 +238,41 @@ def test_disclaimer_present_with_custom_view(cached_market):
     assert not app.exception
     assert any("point-in-time" in warning.value for warning in app.warning)
     assert any("not investment advice" in warning.value for warning in app.warning)
+
+
+def test_inactive_tabs_do_not_read_cache_status(cached_market, monkeypatch):
+    import src.data as data
+    def unexpected(*args, **kwargs):
+        raise AssertionError("The hidden Data Cache tab must not read every CSV")
+    monkeypatch.setattr(data, "cache_status", unexpected)
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    assert not app.exception
+    next(button for button in app.button if button.key == "run_button").click().run()
+    assert not app.exception
+    assert len([el for el in app if el.type in ("vega_lite_chart", "arrow_vega_lite_chart")]) == 1
+    assert len(app.dataframe) == 1  # Cost table only, not hidden ticker/ledger tables.
+    frozen = app.session_state["report"]
+    app.session_state["report_view"] = "Trade Ledger"
+    app.run()
+    assert not app.exception
+    assert not [el for el in app if el.type in ("vega_lite_chart", "arrow_vega_lite_chart")]
+    assert app.dataframe[0].value.equals(frozen.trade_ledger)
+    app.session_state["report_view"] = "Strategy config"
+    app.run()
+    assert not app.exception
+    assert app.session_state["report"].metrics == frozen.metrics
+
+
+def test_cache_file_change_invalidates_date_bounds(cached_market):
+    import streamlit as st
+    st.cache_data.clear()
+    app = AppTest.from_file(str(APP), default_timeout=30).run()
+    assert not app.exception
+    path = CACHE_DIR / "AAPL.csv"
+    frame = pd.read_csv(path)
+    extra = frame.iloc[[-1]].copy()
+    extra["date"] = "2024-03-05"
+    pd.concat([frame, extra], ignore_index=True).to_csv(path, index=False)
+    app.run()
+    assert not app.exception
+    assert next(widget for widget in app.date_input if widget.key == "end_date").proto.max == "2024-03-05"

@@ -71,3 +71,7 @@ Coverage: scraper/cache/incremental append (heavy), indicator fixtures, strategy
 - Data is not point-in-time and the dashboard can show results computed from data that has since been revised.
 - Daily bars and a small universe limit the conclusions; costs, taxes, borrow, market impact, and capacity are only partially modeled.
 - Results are historical simulations for education only — not investment advice.
+
+## Performance
+
+See the [performance notes](PERFORMANCE.md) for caching, lazy loading, and preservation guarantees.
