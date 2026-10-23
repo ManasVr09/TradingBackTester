@@ -321,7 +321,7 @@ def overview(report) -> None:
         color=alt.Color("path:N", title="Path"),
         tooltip=["date", "path", "wealth"],
     )
-    st.altair_chart(chart, width="stretch", height=400)
+    st.altair_chart(chart.configure_axis(labelFontSize=14, titleFontSize=15, labelColor="currentColor", titleColor="currentColor").configure_legend(labelFontSize=14, titleFontSize=15, labelColor="currentColor", titleColor="currentColor"), width="stretch", height=400)
     base_bps = float(report.config_snapshot["backtest"]["transaction_cost_bps"])
     base = report.metrics[base_bps]
     benchmark = report.benchmark_metrics
@@ -356,7 +356,7 @@ def per_ticker(report) -> None:
         color=alt.Color("path:N", title="Path"),
         tooltip=["date", "path", "wealth"],
     )
-    st.altair_chart(chart, width="stretch", height=400)
+    st.altair_chart(chart.configure_axis(labelFontSize=14, titleFontSize=15, labelColor="currentColor", titleColor="currentColor").configure_legend(labelFontSize=14, titleFontSize=15, labelColor="currentColor", titleColor="currentColor"), width="stretch", height=400)
     readable_table(report.per_stock, hide_index=True)
 
 

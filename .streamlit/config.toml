@@ -1,0 +1,50 @@
+# Classic Streamlit layout, Quant Society off-white by default.
+# Switch appearance from the built-in Settings > Theme menu.
+[theme]
+chartCategoricalColors = ["#2884CD", "#CF711B", "#18864B", "#9B51E0", "#D05869", "#218A8F", "#948020", "#AA7954", "#788697", "#897CC4"]
+base = "light"
+font = "sans-serif"
+baseFontSize = 16
+baseRadius = "8px"
+buttonRadius = "6px"
+showWidgetBorder = true
+showSidebarBorder = true
+primaryColor = "#FF4B4B"
+backgroundColor = "#F8F6F2"
+secondaryBackgroundColor = "#F0EEE9"
+textColor = "#262730"
+borderColor = "#D9D7D2"
+
+[theme.light]
+primaryColor = "#FF4B4B"
+backgroundColor = "#F8F6F2"
+secondaryBackgroundColor = "#F0EEE9"
+textColor = "#262730"
+codeBackgroundColor = "#F0EEE9"
+codeTextColor = "#262730"
+borderColor = "#D9D7D2"
+dataframeBorderColor = "#D9D7D2"
+dataframeHeaderBackgroundColor = "#F0EEE9"
+
+[theme.light.sidebar]
+backgroundColor = "#F0EEE9"
+secondaryBackgroundColor = "#E7E5E0"
+textColor = "#262730"
+borderColor = "#D9D7D2"
+
+[theme.dark]
+primaryColor = "#FF4B4B"
+backgroundColor = "#0E1117"
+secondaryBackgroundColor = "#262730"
+textColor = "#FAFAFA"
+codeBackgroundColor = "#262730"
+codeTextColor = "#FAFAFA"
+borderColor = "#41444C"
+dataframeBorderColor = "#41444C"
+dataframeHeaderBackgroundColor = "#262730"
+
+[theme.dark.sidebar]
+backgroundColor = "#262730"
+secondaryBackgroundColor = "#35363F"
+textColor = "#FAFAFA"
+borderColor = "#41444C"
